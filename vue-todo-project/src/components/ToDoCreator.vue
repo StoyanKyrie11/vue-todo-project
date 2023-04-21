@@ -12,27 +12,39 @@
         NB: In order to access the todo value --> todoState.toDo both in v-model and template;
 */
 import { reactive } from "vue";
+import ToDoButton from "./ToDoButton.vue";
 
 const todoState = reactive({
-  toDo: "Testing values here...",
+  toDo: "",
+  invalid: null,
+  errMsg: "",
 });
 
 /* Stores all the possible emits for the SFC into a single array */
 const emit = defineEmits(["create-todo"]);
 
 const createTodo = () => {
-  emit("create-todo", todoState.toDo);
+  /* Reset the value of invalid to null before if check */
+  todoState.invalid = null;
+  if (todoState.toDo !== "") {
+    emit("create-todo", todoState.toDo);
+    todoState.toDo = "";
+    return;
+  }
+  todoState.invalid = true;
+  todoState.errMsg = "Todo value cannot be empty";
 };
 </script>
 
 <template>
-  <div class="input-wrap">
+  <!-- Adding a dynamic class with :class to be displayed ONLY after condition is true -->
+  <div class="input-wrap" :class="{ 'input-err': todoState.invalid }">
     <!-- <input type="text" v-model="todo" /> -->
     <input type="text" v-model="todoState.toDo" />
-    <!-- @click is the shorthand for the v-on directive
-     - listens for DOM events and runs JS when the event is triggered-->
-    <button @click="createTodo()">Create</button>
+    <ToDoButton @click="createTodo()" />
   </div>
+  <!-- <p v-if="todoState.invalid">{{ todoState.errMsg }}</p> -->
+  <p v-show="todoState.invalid" class="err-msg">{{ todoState.errMsg }}</p>
 </template>
 
 <style lang="scss" scoped>
@@ -40,6 +52,11 @@ const createTodo = () => {
   display: flex;
   transition: 250ms ease;
   border: 2px solid #41b080;
+
+  &.input-err {
+    border-color: red;
+  }
+
   &:focus-within {
     box-shadow: 0 -4px 6px -1px rgb(0 0 0 / 0.1),
       0 -2px 4px -2px rgb(0 0 0 / 0.1);
@@ -52,9 +69,12 @@ const createTodo = () => {
       outline: none;
     }
   }
-  button {
-    padding: 8px 16px;
-    border: none;
-  }
+}
+
+.err-msg {
+  margin-top: 6px;
+  font-size: 12px;
+  text-align: center;
+  color: red;
 }
 </style>
